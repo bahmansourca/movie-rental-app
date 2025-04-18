@@ -32,84 +32,58 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadMovies(genre = '') {
     try {
-        const token = localStorage.getItem('token');
-        const response = await fetch('/api/movies', {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error('Erreur lors du chargement des films');
-        }
-
+        const response = await fetch('/api/films');
         const movies = await response.json();
-        displayMovies(movies, genre);
+        
+        const moviesGrid = document.querySelector('.movies-grid');
+        moviesGrid.innerHTML = '';
+        
+        movies.forEach(movie => {
+            const movieCard = document.createElement('div');
+            movieCard.className = 'movie-card';
+            movieCard.innerHTML = `
+                <img src="${movie.image_path}" alt="${movie.title}" class="movie-image">
+                <div class="movie-info">
+                    <h3 class="movie-title">${movie.title}</h3>
+                    <p class="movie-genre">${movie.genre}</p>
+                    <button class="rent-button" onclick="rentMovie(${movie.id})">Louer</button>
+                </div>
+            `;
+            moviesGrid.appendChild(movieCard);
+        });
     } catch (error) {
         console.error('Erreur:', error);
-        alert('Une erreur est survenue lors du chargement des films');
+        alert('Erreur lors du chargement des films');
     }
 }
 
-function displayMovies(movies, genre = '') {
-    const moviesGrid = document.getElementById('moviesGrid');
-    const searchInput = document.getElementById('searchInput');
-    const searchTerm = searchInput.value.toLowerCase();
-
-    const filteredMovies = movies.filter(movie => {
-        const matchesGenre = !genre || movie.genre === genre;
-        const matchesSearch = movie.titre.toLowerCase().includes(searchTerm);
-        return matchesGenre && matchesSearch;
-    });
-
-    if (filteredMovies.length === 0) {
-        moviesGrid.innerHTML = '<p class="empty-message">Aucun film trouvé</p>';
-        return;
-    }
-
-    moviesGrid.innerHTML = filteredMovies.map(movie => `
-        <div class="movie-card">
-            <img src="${movie.imgPath}" alt="${movie.titre}">
-            <div class="movie-info">
-                <h3>${movie.titre}</h3>
-                <p>${movie.genre}</p>
-                <p>${movie.annee_sortie}</p>
-                <p>${movie.langue_originale}</p>
-                <div class="movie-actions">
-                    <button class="rent-btn" onclick="rentMovie('${movie._id}')" ${movie.copies_disponibles === 0 ? 'disabled' : ''}>
-                        Louer (${movie.copies_disponibles} disponibles)
-                    </button>
-                    <a href="${movie.trailer}" target="_blank" class="trailer-btn">
-                        Bande-annonce
-                    </a>
-                </div>
-            </div>
-        </div>
-    `).join('');
-}
-
-async function rentMovie(movieId) {
+async function rentMovie(filmId) {
     try {
         const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = 'login.html';
+            return;
+        }
+        
         const response = await fetch('/api/films/rent', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({ film_id: movieId })
+            body: JSON.stringify({ film_id: filmId })
         });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Erreur lors de la location du film');
+        
+        if (response.ok) {
+            alert('Film loué avec succès !');
+            loadMovies();
+        } else {
+            const error = await response.json();
+            alert(error.message || 'Erreur lors de la location');
         }
-
-        alert('Film loué avec succès !');
-        loadMovies();
     } catch (error) {
         console.error('Erreur:', error);
-        alert('Une erreur est survenue lors de la location du film');
+        alert('Erreur lors de la location');
     }
 }
 

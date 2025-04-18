@@ -3,6 +3,8 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
 const routes = require('./routes');
+const authRoutes = require('./routes/authRoutes');
+const filmRoutes = require('./routes/filmRoutes');
 
 // Load environment variables
 dotenv.config();
@@ -46,6 +48,13 @@ app.use('/images', express.static(path.join(__dirname, '../public/images')));
 
 // Routes
 app.use('/api', routes);
+app.use('/api/auth', authRoutes);
+app.use('/api/films', filmRoutes);
+
+// Route par défaut
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/index.html'));
+});
 
 // Add a test route
 app.get('/test', (req, res) => {

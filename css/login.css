@@ -1,76 +1,79 @@
 body {
     margin: 0;
     padding: 0;
-    font-family: 'Arial', sans-serif;
-    background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('../images/cinema-bg.jpg');
+    font-family: Arial, sans-serif;
+    background: url('../images/cinema-bg.jpg') no-repeat center center fixed;
     background-size: cover;
-    background-position: center;
     height: 100vh;
     display: flex;
-    justify-content: center;
     align-items: center;
+    justify-content: center;
 }
 
-.login-container {
-    background: rgba(255, 255, 255, 0.95);
-    padding: 2rem;
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+.container {
     width: 100%;
     max-width: 400px;
+    padding: 20px;
 }
 
-.login-container h2 {
+.login-box {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+}
+
+h1 {
     text-align: center;
     color: #333;
-    margin-bottom: 1.5rem;
+    margin-bottom: 30px;
 }
 
 .form-group {
-    margin-bottom: 1rem;
+    margin-bottom: 20px;
 }
 
-.form-group label {
+label {
     display: block;
-    margin-bottom: 0.5rem;
-    color: #333;
+    margin-bottom: 5px;
+    color: #555;
 }
 
-.form-group input {
+input {
     width: 100%;
-    padding: 0.8rem;
+    padding: 10px;
     border: 1px solid #ddd;
     border-radius: 5px;
-    font-size: 1rem;
+    font-size: 16px;
 }
 
 button {
     width: 100%;
-    padding: 0.8rem;
-    background-color: #007bff;
+    padding: 12px;
+    background: #007bff;
     color: white;
     border: none;
     border-radius: 5px;
-    font-size: 1rem;
+    font-size: 16px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: background 0.3s;
 }
 
 button:hover {
-    background-color: #0056b3;
+    background: #0056b3;
 }
 
-.register-link {
+p {
     text-align: center;
-    margin-top: 1rem;
+    margin-top: 20px;
 }
 
-.register-link a {
+a {
     color: #007bff;
     text-decoration: none;
 }
 
-.register-link a:hover {
+a:hover {
     text-decoration: underline;
 }
 

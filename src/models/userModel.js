@@ -1,35 +1,32 @@
-const pool = require('../../config/database');
+const db = require('../config/database');
 const bcrypt = require('bcryptjs');
 
 class User {
     static async create({ name, email, password }) {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const [result] = await pool.execute(
-            'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
-            [name, email, hashedPassword]
-        );
-        return result.insertId;
+        const query = `
+            INSERT INTO users (name, email, password)
+            VALUES (?, ?, ?)
+            RETURNING id
+        `;
+        const [result] = await db.query(query, [name, email, password]);
+        return result.id;
     }
 
     static async findByEmail(email) {
-        const [rows] = await pool.execute(
-            'SELECT * FROM users WHERE email = ?',
-            [email]
-        );
+        const query = 'SELECT * FROM users WHERE email = ?';
+        const [rows] = await db.query(query, [email]);
         return rows[0];
     }
 
     static async findById(id) {
-        const [rows] = await pool.execute(
-            'SELECT id, name, email, date_inscription FROM users WHERE id = ?',
-            [id]
-        );
+        const query = 'SELECT * FROM users WHERE id = ?';
+        const [rows] = await db.query(query, [id]);
         return rows[0];
     }
 
     static async updatePassword(id, newPassword) {
         const hashedPassword = await bcrypt.hash(newPassword, 10);
-        await pool.execute(
+        await db.execute(
             'UPDATE users SET password = ? WHERE id = ?',
             [hashedPassword, id]
         );
