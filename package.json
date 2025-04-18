@@ -1,0 +1,44 @@
+{
+  "name": "movie-rental-app",
+  "version": "1.0.0",
+  "description": "A web application for managing movie rentals",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
+    "init-db": "node scripts/init-db.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "download-images": "node scripts/download-images.js",
+    "download-login-bg": "node scripts/download-login-bg.js",
+    "download-register-bg": "node scripts/download-register-bg.js",
+    "download-movies-bg": "node scripts/download-movies-bg.js",
+    "download-missing-images": "node scripts/download-missing-images.js",
+    "download-more-images": "node scripts/download-more-images.js",
+    "download-last-images": "node scripts/download-last-images.js",
+    "download-final-images": "node scripts/download-final-images.js",
+    "download-sister-act": "node scripts/download-sister-act.js",
+    "download-leon": "node scripts/download-leon.js",
+    "download-new-movies-bg": "node scripts/download-new-movies-bg.js"
+  },
+  "keywords": [
+    "movie",
+    "rental",
+    "nodejs",
+    "express",
+    "mysql"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "express-validator": "^7.0.1",
+    "jsonwebtoken": "^9.0.0",
+    "mysql2": "^3.2.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  }
+}

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Rental - Films Disponibles</title>
+    <link rel="stylesheet" href="css/movies.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>Movie Rental</h1>
+            <nav>
+                <a href="movies.html" class="active">Films</a>
+                <a href="rentals.html">Mes Locations</a>
+                <a href="#" id="logout">Déconnexion</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Rechercher un film...">
+        </div>
+
+        <div class="filters">
+            <button class="filter-btn active" data-genre="all">Tous</button>
+            <button class="filter-btn" data-genre="Action">Action</button>
+            <button class="filter-btn" data-genre="Comédie">Comédie</button>
+            <button class="filter-btn" data-genre="Drame">Drame</button>
+            <button class="filter-btn" data-genre="Science-Fiction">Science-Fiction</button>
+        </div>
+
+        <div class="movies-grid" id="moviesGrid">
+            <!-- Les films seront chargés dynamiquement ici -->
+        </div>
+    </main>
+
+    <script>
+        // Vérifier si l'utilisateur est connecté
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+
+        // Fonction pour charger les films
+        async function loadMovies() {
+            try {
+                console.log('Tentative de chargement des films...');
+                const response = await fetch('/api/films', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('Erreur de réponse:', response.status, errorData);
+                    throw new Error(`Erreur ${response.status}: ${errorData.message || 'Erreur lors du chargement des films'}`);
+                }
+
+                const movies = await response.json();
+                console.log('Films chargés avec succès:', movies);
+                displayMovies(movies);
+            } catch (error) {
+                console.error('Erreur détaillée:', error);
+                alert('Erreur lors du chargement des films: ' + error.message);
+            }
+        }
+
+        // Fonction pour afficher les films
+        function displayMovies(movies) {
+            const moviesGrid = document.getElementById('moviesGrid');
+            moviesGrid.innerHTML = '';
+
+            movies.forEach(movie => {
+                const movieCard = document.createElement('div');
+                movieCard.className = 'movie-card';
+                movieCard.innerHTML = `
+                    <img src="images/${movie.imgPath}" alt="${movie.title}">
+                    <div class="movie-info">
+                        <h3>${movie.title}</h3>
+                        <p>Genre: ${movie.genre}</p>
+                        <p>Année: ${movie.annee_sortie}</p>
+                        <p>Disponibilité: ${movie.available_copies} exemplaires</p>
+                        <div class="movie-actions">
+                            <button onclick="rentMovie(${movie.id})" class="rent-btn" ${movie.available_copies === 0 ? 'disabled' : ''}>
+                                <i class="fas fa-shopping-cart"></i> Louer
+                            </button>
+                            <button onclick="openTrailer('${movie.trailer}')" class="trailer-btn">
+                                <i class="fas fa-play"></i> Bande-annonce
+                            </button>
+                        </div>
+                    </div>
+                `;
+                moviesGrid.appendChild(movieCard);
+            });
+        }
+
+        // Fonction pour louer un film
+        async function rentMovie(movieId) {
+            try {
+                const response = await fetch('/api/films/rent', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ film_id: movieId })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('Erreur de réponse:', response.status, errorData);
+                    throw new Error(`Erreur ${response.status}: ${errorData.message || 'Erreur lors de la location'}`);
+                }
+
+                alert('Film loué avec succès');
+                loadMovies(); // Recharger la liste des films
+            } catch (error) {
+                console.error('Erreur détaillée:', error);
+                alert('Erreur lors de la location: ' + error.message);
+            }
+        }
+
+        // Fonction pour ouvrir la bande-annonce
+        function openTrailer(trailerUrl) {
+            if (trailerUrl) {
+                // Extraire l'ID de la vidéo YouTube
+                const videoId = trailerUrl.split('v=')[1];
+                if (videoId) {
+                    // Ouvrir la vidéo dans une nouvelle fenêtre avec les paramètres optimisés
+                    window.open(`https://www.youtube.com/embed/${videoId}?autoplay=1`, '_blank', 'width=800,height=450');
+                } else {
+                    alert('URL de la bande-annonce invalide');
+                }
+            } else {
+                alert('Pas de bande-annonce disponible pour ce film');
+            }
+        }
+
+        // Gérer la déconnexion
+        document.getElementById('logout').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        });
+
+        // Gérer la recherche
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const movieCards = document.querySelectorAll('.movie-card');
+            
+            movieCards.forEach(card => {
+                const title = card.querySelector('h3').textContent.toLowerCase();
+                if (title.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+
+        // Gérer les filtres
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                const genre = btn.dataset.genre;
+                const movieCards = document.querySelectorAll('.movie-card');
+                
+                movieCards.forEach(card => {
+                    const movieGenre = card.querySelector('p').textContent.split(': ')[1];
+                    if (genre === 'all' || movieGenre === genre) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        // Charger les films au chargement de la page
+        loadMovies();
+    </script>
+</body>
+</html> 

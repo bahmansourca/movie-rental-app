@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Rental - Mes Locations</title>
+    <link rel="stylesheet" href="css/rentals.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .watch-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+        }
+
+        .watch-modal-content {
+            position: relative;
+            width: 80%;
+            height: 80%;
+            margin: 5% auto;
+            background-color: #000;
+        }
+
+        .watch-modal iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        .watch-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 1rem;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+
+        .watch-btn:hover {
+            background-color: #2980b9;
+        }
+
+        .watch-btn i {
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>Movie Rental</h1>
+            <nav>
+                <a href="movies.html">Films</a>
+                <a href="rentals.html" class="active">Mes Locations</a>
+                <a href="#" id="logout">Déconnexion</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="rentals-container">
+            <h2>Mes Locations Actives</h2>
+            <div class="rentals-grid" id="activeRentalsGrid">
+                <!-- Les locations actives seront chargées ici -->
+            </div>
+
+            <h2>Historique des Locations</h2>
+            <div class="rentals-grid" id="historyRentalsGrid">
+                <!-- L'historique des locations sera chargé ici -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal pour regarder le film -->
+    <div id="watchModal" class="watch-modal">
+        <div class="watch-modal-content">
+            <span class="close-modal" onclick="closeWatchModal()">&times;</span>
+            <iframe id="watchFrame" allowfullscreen></iframe>
+        </div>
+    </div>
+
+    <script>
+        // Vérifier si l'utilisateur est connecté
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+
+        // Fonction pour charger les locations
+        async function loadRentals() {
+            try {
+                console.log('Tentative de chargement des locations...');
+                const response = await fetch('/api/my-rentals', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                console.log('Statut de la réponse:', response.status);
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('Erreur du serveur:', errorData);
+                    throw new Error(errorData.message || 'Erreur lors du chargement des locations');
+                }
+
+                const rentals = await response.json();
+                console.log('Locations reçues:', rentals);
+                
+                const activeRentalsGrid = document.getElementById('activeRentalsGrid');
+                const historyRentalsGrid = document.getElementById('historyRentalsGrid');
+                activeRentalsGrid.innerHTML = '';
+                historyRentalsGrid.innerHTML = '';
+
+                if (!rentals || rentals.length === 0) {
+                    activeRentalsGrid.innerHTML = '<div class="empty-message">Aucune location en cours</div>';
+                    historyRentalsGrid.innerHTML = '<div class="empty-message">Aucun historique de location</div>';
+                    return;
+                }
+
+                // Séparer les locations actives et l'historique
+                const activeRentals = rentals.filter(rental => rental.status === 'active');
+                const historyRentals = rentals.filter(rental => rental.status === 'returned');
+
+                // Afficher les locations actives
+                if (activeRentals.length === 0) {
+                    activeRentalsGrid.innerHTML = '<div class="empty-message">Aucune location en cours</div>';
+                } else {
+                    activeRentals.forEach(rental => {
+                        const rentalCard = document.createElement('div');
+                        rentalCard.className = 'rental-card';
+                        rentalCard.innerHTML = `
+                            <img src="images/${rental.film.imgPath}" alt="${rental.film.title}">
+                            <div class="rental-info">
+                                <h3>${rental.film.title}</h3>
+                                <p>Date de location: ${new Date(rental.rental_date).toLocaleDateString()}</p>
+                                <p>Statut: En cours</p>
+                                <button onclick="returnMovie(${rental.id})" class="return-btn">
+                                    <i class="fas fa-undo"></i> Retourner
+                                </button>
+                                <button onclick="watchMovie('${rental.film.trailer}')" class="watch-btn">
+                                    <i class="fas fa-play"></i> Regarder
+                                </button>
+                            </div>
+                        `;
+                        activeRentalsGrid.appendChild(rentalCard);
+                    });
+                }
+
+                // Afficher l'historique des locations
+                if (historyRentals.length === 0) {
+                    historyRentalsGrid.innerHTML = '<div class="empty-message">Aucun historique de location</div>';
+                } else {
+                    historyRentals.forEach(rental => {
+                        const rentalCard = document.createElement('div');
+                        rentalCard.className = 'rental-card';
+                        rentalCard.innerHTML = `
+                            <img src="images/${rental.film.imgPath}" alt="${rental.film.title}">
+                            <div class="rental-info">
+                                <h3>${rental.film.title}</h3>
+                                <p>Date de location: ${new Date(rental.rental_date).toLocaleDateString()}</p>
+                                <p>Date de retour: ${new Date(rental.return_date).toLocaleDateString()}</p>
+                                <p class="returned">Retourné</p>
+                            </div>
+                        `;
+                        historyRentalsGrid.appendChild(rentalCard);
+                    });
+                }
+            } catch (error) {
+                console.error('Erreur détaillée:', error);
+                alert('Erreur lors du chargement des locations: ' + error.message);
+            }
+        }
+
+        // Fonction pour retourner un film
+        async function returnMovie(rentalId) {
+            try {
+                console.log('Tentative de retour du film avec ID:', rentalId);
+                const response = await fetch('/api/films/return', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ rental_id: rentalId })
+                });
+
+                console.log('Statut de la réponse:', response.status);
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('Erreur du serveur:', errorData);
+                    throw new Error(errorData.message || 'Erreur lors du retour du film');
+                }
+
+                alert('Film retourné avec succès');
+                loadRentals(); // Recharger la liste des locations
+            } catch (error) {
+                console.error('Erreur détaillée:', error);
+                alert('Erreur lors du retour du film: ' + error.message);
+            }
+        }
+
+        // Fonction pour regarder le film
+        function watchMovie(trailerUrl) {
+            console.log('Tentative de lecture de la vidéo:', trailerUrl);
+            
+            if (!trailerUrl) {
+                alert('Pas de vidéo disponible pour ce film');
+                return;
+            }
+
+            try {
+                // Extraire l'ID de la vidéo YouTube de différentes façons
+                let videoId;
+                if (trailerUrl.includes('youtube.com/watch?v=')) {
+                    videoId = trailerUrl.split('v=')[1].split('&')[0];
+                } else if (trailerUrl.includes('youtu.be/')) {
+                    videoId = trailerUrl.split('youtu.be/')[1].split('?')[0];
+                } else if (trailerUrl.includes('youtube.com/embed/')) {
+                    videoId = trailerUrl.split('embed/')[1].split('?')[0];
+                }
+
+                console.log('ID de la vidéo extrait:', videoId);
+
+                if (videoId) {
+                    const modal = document.getElementById('watchModal');
+                    const iframe = document.getElementById('watchFrame');
+                    
+                    // Construire l'URL embed avec les paramètres optimisés
+                    const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&showinfo=0&modestbranding=1&playsinline=1&enablejsapi=1`;
+                    console.log('URL embed générée:', embedUrl);
+                    
+                    // Vider l'iframe avant de changer la source
+                    iframe.src = '';
+                    
+                    // Attendre un court instant avant de définir la nouvelle source
+                    setTimeout(() => {
+                        iframe.src = embedUrl;
+                        modal.style.display = 'block';
+                        console.log('Modal affiché et iframe chargé');
+                    }, 100);
+                } else {
+                    console.error('Impossible d\'extraire l\'ID de la vidéo');
+                    alert('URL de la vidéo invalide ou non supportée');
+                }
+            } catch (error) {
+                console.error('Erreur lors de l\'ouverture de la vidéo:', error);
+                alert('Erreur lors de l\'ouverture de la vidéo');
+            }
+        }
+
+        // Fonction pour fermer le modal
+        function closeWatchModal() {
+            const modal = document.getElementById('watchModal');
+            const iframe = document.getElementById('watchFrame');
+            iframe.src = '';
+            modal.style.display = 'none';
+            console.log('Modal fermé');
+        }
+
+        // Fermer le modal en cliquant en dehors
+        window.onclick = function(event) {
+            const modal = document.getElementById('watchModal');
+            if (event.target == modal) {
+                closeWatchModal();
+            }
+        }
+
+        // Gérer la déconnexion
+        document.getElementById('logout').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        });
+
+        // Charger les locations au chargement de la page
+        loadRentals();
+    </script>
+</body>
+</html> 

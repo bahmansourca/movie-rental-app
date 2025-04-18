@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Rental - Film Details</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .film-details {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .film-header {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .film-poster {
+            width: 300px;
+            height: 450px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .film-info {
+            flex-grow: 1;
+        }
+        .film-title {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .film-meta {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .film-description {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        .film-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .action-button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        .rent-button {
+            background-color: #007bff;
+            color: white;
+        }
+        .rent-button:hover {
+            background-color: #0056b3;
+        }
+        .rent-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .back-button {
+            background-color: #6c757d;
+            color: white;
+            text-decoration: none;
+        }
+        .back-button:hover {
+            background-color: #5a6268;
+        }
+        .trailer-section {
+            margin-top: 20px;
+        }
+        .trailer-iframe {
+            width: 100%;
+            height: 450px;
+            border: none;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Film Details</h1>
+            <div class="nav-buttons">
+                <a href="movies.html" class="nav-button">Back to Movies</a>
+                <a href="profile.html" class="nav-button">My Profile</a>
+                <button class="logout-button" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <div class="film-details" id="filmDetails">
+            <!-- Film details will be loaded here -->
+        </div>
+    </div>
+
+    <script>
+        // Check if user is logged in
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+
+        // Get film ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const filmId = urlParams.get('id');
+
+        // Load film details
+        async function loadFilmDetails() {
+            try {
+                const response = await fetch(`/api/films/${filmId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const film = await response.json();
+                displayFilmDetails(film);
+            } catch (error) {
+                console.error('Error loading film details:', error);
+            }
+        }
+
+        // Display film details
+        function displayFilmDetails(film) {
+            const filmDetailsDiv = document.getElementById('filmDetails');
+            filmDetailsDiv.innerHTML = `
+                <div class="film-header">
+                    <img src="${film.imgPath || 'placeholder.jpg'}" alt="${film.title}" class="film-poster">
+                    <div class="film-info">
+                        <h2 class="film-title">${film.title}</h2>
+                        <div class="film-meta">
+                            <p><strong>Genre:</strong> ${film.genre}</p>
+                            <p><strong>Year:</strong> ${film.annee_sortie}</p>
+                            <p><strong>Original Language:</strong> ${film.langue_originale}</p>
+                            <p><strong>Production Countries:</strong> ${film.pays_productions}</p>
+                            <p><strong>Actors:</strong> ${film.acteurs}</p>
+                            <p><strong>Directors:</strong> ${film.realisateurs}</p>
+                            <p><strong>Available Copies:</strong> ${film.available_copies}</p>
+                        </div>
+                        <div class="film-actions">
+                            <button class="action-button rent-button" onclick="rentMovie(${film.id})" 
+                                ${film.available_copies <= 0 ? 'disabled' : ''}>
+                                ${film.available_copies <= 0 ? 'Not Available' : 'Rent'}
+                            </button>
+                            <a href="movies.html" class="action-button back-button">Back to Movies</a>
+                        </div>
+                    </div>
+                </div>
+                ${film.trailer ? `
+                    <div class="trailer-section">
+                        <h3>Trailer</h3>
+                        <iframe src="${film.trailer}" class="trailer-iframe" allowfullscreen></iframe>
+                    </div>
+                ` : ''}
+            `;
+        }
+
+        // Rent a movie
+        async function rentMovie(movieId) {
+            try {
+                const response = await fetch('/api/films/rent', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ film_id: movieId })
+                });
+
+                if (response.ok) {
+                    alert('Movie rented successfully!');
+                    window.location.href = 'profile.html';
+                } else {
+                    const error = await response.json();
+                    alert(error.message || 'Failed to rent movie');
+                }
+            } catch (error) {
+                console.error('Error renting movie:', error);
+                alert('An error occurred while renting the movie');
+            }
+        }
+
+        // Logout
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        }
+
+        // Load film details when page loads
+        loadFilmDetails();
+    </script>
+</body>
+</html> 
