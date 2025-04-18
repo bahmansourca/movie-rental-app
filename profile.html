@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Rental - Mes Locations</title>
+    <link rel="stylesheet" href="css/profile.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Movie Rental</h1>
+            <div class="nav-buttons">
+                <a href="movies.html" class="nav-button">
+                    <i class="fas fa-film"></i> Films
+                </a>
+                <button class="logout-button" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </button>
+            </div>
+        </div>
+
+        <div class="profile-section">
+            <h2><i class="fas fa-user"></i> Informations Personnelles</h2>
+            <div id="userInfo">
+                <!-- Les informations utilisateur seront chargées ici -->
+            </div>
+        </div>
+
+        <div class="rentals-section">
+            <h2><i class="fas fa-ticket-alt"></i> Mes Locations en Cours</h2>
+            <div id="currentRentals">
+                <!-- Les locations en cours seront chargées ici -->
+            </div>
+        </div>
+
+        <div class="rentals-section">
+            <h2><i class="fas fa-history"></i> Historique des Locations</h2>
+            <div id="rentalHistory">
+                <!-- L'historique des locations sera chargé ici -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Vérifier si l'utilisateur est connecté
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+
+        // Charger les informations utilisateur
+        async function loadUserInfo() {
+            try {
+                const response = await fetch('/api/users/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const user = await response.json();
+                displayUserInfo(user);
+            } catch (error) {
+                console.error('Erreur lors du chargement des informations utilisateur:', error);
+            }
+        }
+
+        // Afficher les informations utilisateur
+        function displayUserInfo(user) {
+            const userInfoDiv = document.getElementById('userInfo');
+            userInfoDiv.innerHTML = `
+                <p><i class="fas fa-user-circle"></i> <strong>Nom:</strong> ${user.name}</p>
+                <p><i class="fas fa-envelope"></i> <strong>Email:</strong> ${user.email}</p>
+                <p><i class="fas fa-calendar-alt"></i> <strong>Membre depuis:</strong> ${new Date(user.date_inscription).toLocaleDateString()}</p>
+            `;
+        }
+
+        // Charger les locations en cours
+        async function loadCurrentRentals() {
+            try {
+                const response = await fetch('/api/my-rentals', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const rentals = await response.json();
+                displayCurrentRentals(rentals);
+            } catch (error) {
+                console.error('Erreur lors du chargement des locations en cours:', error);
+            }
+        }
+
+        // Afficher les locations en cours
+        function displayCurrentRentals(rentals) {
+            const rentalsDiv = document.getElementById('currentRentals');
+            if (rentals.length === 0) {
+                rentalsDiv.innerHTML = '<div class="empty-message">Aucune location en cours</div>';
+                return;
+            }
+
+            rentalsDiv.innerHTML = rentals.map(rental => `
+                <div class="rental-card">
+                    <img src="/images/${rental.imgPath}" alt="${rental.title}">
+                    <div class="rental-info">
+                        <div class="rental-title">${rental.title}</div>
+                        <div class="rental-details">
+                            <p><i class="fas fa-calendar"></i> Date de location: ${new Date(rental.rental_date).toLocaleDateString()}</p>
+                        </div>
+                    </div>
+                    <button class="return-button" onclick="returnMovie(${rental.id})">
+                        <i class="fas fa-undo"></i> Rendre
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // Rendre un film
+        async function returnMovie(rentalId) {
+            try {
+                const response = await fetch('/api/films/return', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ rental_id: rentalId })
+                });
+
+                if (response.ok) {
+                    alert('Film rendu avec succès !');
+                    loadCurrentRentals(); // Rafraîchir la liste
+                } else {
+                    const error = await response.json();
+                    alert(error.message || 'Erreur lors du retour du film');
+                }
+            } catch (error) {
+                console.error('Erreur lors du retour du film:', error);
+                alert('Une erreur est survenue lors du retour du film');
+            }
+        }
+
+        // Déconnexion
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        }
+
+        // Charger les données au chargement de la page
+        loadUserInfo();
+        loadCurrentRentals();
+    </script>
+</body>
+</html> 

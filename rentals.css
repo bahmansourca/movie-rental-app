@@ -1,0 +1,142 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('../images/movies-bg.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    min-height: 100vh;
+    color: #fff;
+}
+
+header {
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 1rem 0;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 2rem;
+}
+
+h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: #fff;
+}
+
+nav {
+    display: flex;
+    gap: 2rem;
+}
+
+nav a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 1.1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+nav a:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+nav a.active {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+main {
+    max-width: 1200px;
+    margin: 100px auto 0;
+    padding: 2rem;
+}
+
+.rentals-container {
+    background-color: rgba(0, 0, 0, 0.8);
+    border-radius: 10px;
+    padding: 2rem;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+h2 {
+    margin-top: 0;
+    margin-bottom: 2rem;
+    font-size: 2rem;
+    text-align: center;
+    color: #fff;
+}
+
+.rentals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.rental-card {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: transform 0.3s;
+}
+
+.rental-card:hover {
+    transform: translateY(-5px);
+}
+
+.rental-card img {
+    width: 100%;
+    height: 400px;
+    object-fit: cover;
+}
+
+.rental-info {
+    padding: 1.5rem;
+}
+
+.rental-info h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1.4rem;
+}
+
+.rental-info p {
+    margin: 0.5rem 0;
+    color: #ccc;
+}
+
+.return-btn {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    margin-top: 1rem;
+    width: 100%;
+    transition: background-color 0.3s;
+}
+
+.return-btn:hover {
+    background-color: #c0392b;
+}
+
+.return-btn i {
+    margin-right: 0.5rem;
+}
+
+.returned {
+    color: #2ecc71 !important;
+    font-weight: bold;
+    margin-top: 1rem !important;
+} 
