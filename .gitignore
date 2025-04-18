@@ -6,22 +6,28 @@ yarn-error.log
 
 # Environment variables
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# IDE
-.vscode/
+# Build files
+dist/
+build/
+
+# IDE files
 .idea/
+.vscode/
+*.swp
+*.swo
 
-# OS
+# OS files
 .DS_Store
 Thumbs.db
 
 # Logs
 logs/
 *.log
-
-# Build
-dist/
-build/
 
 # Images (si vous voulez les exclure)
 public/images/ 

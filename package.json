@@ -18,7 +18,10 @@
     "download-final-images": "node scripts/download-final-images.js",
     "download-sister-act": "node scripts/download-sister-act.js",
     "download-leon": "node scripts/download-leon.js",
-    "download-new-movies-bg": "node scripts/download-new-movies-bg.js"
+    "download-new-movies-bg": "node scripts/download-new-movies-bg.js",
+    "build": "echo 'Building for GitHub Pages...'",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d public"
   },
   "keywords": [
     "movie",
@@ -39,6 +42,7 @@
     "mysql2": "^3.2.0"
   },
   "devDependencies": {
+    "gh-pages": "^6.3.0",
     "nodemon": "^2.0.22"
   }
 }
